@@ -3,11 +3,11 @@ package com.atomix.island.services
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.view.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.*
@@ -43,24 +43,29 @@ class IslandOverlayService : Service(),
     private var overlayView: View? = null
 
     private var islandState by mutableStateOf<IslandState>(IslandState.Compact)
-    private var positionX by mutableStateOf(0)
-    private var positionY by mutableStateOf(48)
+    private var positionX = 0
+    private var positionY = 48
 
     companion object {
+        private const val TAG = "IslandOverlayService"
         const val ACTION_UPDATE_STATE = "com.atomix.island.UPDATE_STATE"
-        const val EXTRA_ISLAND_STATE  = "island_state"
         var instance: IslandOverlayService? = null
     }
 
     override fun onCreate() {
-        savedStateRegistryController.performAttach()
-        savedStateRegistryController.performRestore(null)
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-        super.onCreate()
-        instance = this
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        createOverlay()
-        startForeground(1, buildForegroundNotification())
+        try {
+            savedStateRegistryController.performAttach()
+            savedStateRegistryController.performRestore(null)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+            super.onCreate()
+            instance = this
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            startForeground(1, buildForegroundNotification())
+            createOverlay()
+        } catch (e: Exception) {
+            Log.e(TAG, "onCreate failed", e)
+            stopSelf()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -80,10 +85,15 @@ class IslandOverlayService : Service(),
     private fun createOverlay() {
         val params = buildLayoutParams()
 
-        val view = object : AbstractComposeView(this) {
+        val composeView = object : AbstractComposeView(this) {
+
+            init {
+                setViewTreeLifecycleOwner(this@IslandOverlayService)
+                setViewTreeViewModelStoreOwner(this@IslandOverlayService)
+            }
+
             @Composable
             override fun Content() {
-                val selfView = this
                 AtomixIslandTheme {
                     var dragOffsetX by remember { mutableStateOf(0f) }
                     var dragOffsetY by remember { mutableStateOf(0f) }
@@ -121,7 +131,11 @@ class IslandOverlayService : Service(),
                                     dragOffsetY += dragAmount.y
                                     params.x = (lastX + dragOffsetX).toInt()
                                     params.y = (lastY + dragOffsetY).toInt()
-                                    windowManager.updateViewLayout(selfView, params)
+                                    try {
+                                        windowManager.updateViewLayout(overlayView, params)
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "updateViewLayout failed", e)
+                                    }
                                 },
                                 onDragEnd = {
                                     positionX   = params.x
@@ -134,16 +148,14 @@ class IslandOverlayService : Service(),
                     )
                 }
             }
-        }.also { composeView ->
-            composeView.setViewTreeLifecycleOwner(this)
-            composeView.setViewTreeViewModelStoreOwner(this)
-            composeView.setViewCompositionStrategy(
-                androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
-            )
         }
 
-        overlayView = view
-        windowManager.addView(view, params)
+        overlayView = composeView
+        try {
+            windowManager.addView(composeView, params)
+        } catch (e: Exception) {
+            Log.e(TAG, "addView failed", e)
+        }
     }
 
     private fun buildLayoutParams(): WindowManager.LayoutParams {
@@ -167,7 +179,11 @@ class IslandOverlayService : Service(),
     }
 
     private fun removeOverlay() {
-        overlayView?.let { windowManager.removeView(it) }
+        try {
+            overlayView?.let { windowManager.removeView(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "removeView failed", e)
+        }
         overlayView = null
     }
 

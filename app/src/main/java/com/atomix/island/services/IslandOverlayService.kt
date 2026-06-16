@@ -83,6 +83,7 @@ class IslandOverlayService : Service(),
         val view = object : AbstractComposeView(this) {
             @Composable
             override fun Content() {
+                val selfView = this
                 AtomixIslandTheme {
                     var dragOffsetX by remember { mutableStateOf(0f) }
                     var dragOffsetY by remember { mutableStateOf(0f) }
@@ -120,7 +121,7 @@ class IslandOverlayService : Service(),
                                     dragOffsetY += dragAmount.y
                                     params.x = (lastX + dragOffsetX).toInt()
                                     params.y = (lastY + dragOffsetY).toInt()
-                                    windowManager.updateViewLayout(this@object, params)
+                                    windowManager.updateViewLayout(selfView, params)
                                 },
                                 onDragEnd = {
                                     positionX   = params.x

@@ -8,7 +8,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.ui.graphics.Color
 import androidx.core.graphics.ColorUtils
-import androidx.palette.graphics.Palette
 import com.atomix.island.ui.theme.AtomixColors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -20,10 +19,6 @@ import javax.inject.Singleton
 class WallpaperColorExtractor @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    /**
-     * Extracts the dominant vibrant color from the current wallpaper.
-     * Falls back to ElectricBlue if extraction fails or permission denied.
-     */
     suspend fun extractDominantColor(): Color = withContext(Dispatchers.IO) {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -50,16 +45,24 @@ class WallpaperColorExtractor @Inject constructor(
         val drawable = wm.drawable as? BitmapDrawable ?: return AtomixColors.ElectricBlue
         val bitmap   = Bitmap.createScaledBitmap(drawable.bitmap, 64, 64, true)
 
-        val palette = Palette.from(bitmap).generate()
-        val swatch  = palette.vibrantSwatch
-            ?: palette.lightVibrantSwatch
-            ?: palette.dominantSwatch
-            ?: return AtomixColors.ElectricBlue
+        // Simple dominant color extraction without Palette library
+        var rSum = 0L; var gSum = 0L; var bSum = 0L
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        pixels.forEach { pixel ->
+            rSum += (pixel shr 16) and 0xFF
+            gSum += (pixel shr 8)  and 0xFF
+            bSum +=  pixel         and 0xFF
+        }
+        val count = pixels.size.toLong()
+        val r = (rSum / count).toInt()
+        val g = (gSum / count).toInt()
+        val b = (bSum / count).toInt()
 
         // Ensure good contrast against dark backgrounds
         val hsl = FloatArray(3)
-        ColorUtils.colorToHSL(swatch.rgb, hsl)
-        hsl[2] = 0.6f.coerceAtLeast(hsl[2]) // min lightness 60%
+        ColorUtils.colorToHSL(android.graphics.Color.rgb(r, g, b), hsl)
+        hsl[2] = 0.6f.coerceAtLeast(hsl[2])
         return Color(ColorUtils.HSLToColor(hsl))
     }
 }

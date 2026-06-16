@@ -9,11 +9,12 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.view.*
+import android.widget.FrameLayout
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.AbstractComposeView
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
@@ -40,8 +41,7 @@ class IslandOverlayService : Service(),
         get() = savedStateRegistryController.savedStateRegistry
 
     private lateinit var windowManager: WindowManager
-    private var overlayView: View? = null
-
+    private var containerView: FrameLayout? = null
     private var islandState by mutableStateOf<IslandState>(IslandState.Compact)
     private var positionX = 0
     private var positionY = 48
@@ -53,19 +53,14 @@ class IslandOverlayService : Service(),
     }
 
     override fun onCreate() {
-        try {
-            savedStateRegistryController.performAttach()
-            savedStateRegistryController.performRestore(null)
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
-            super.onCreate()
-            instance = this
-            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-            startForeground(1, buildForegroundNotification())
-            createOverlay()
-        } catch (e: Exception) {
-            Log.e(TAG, "onCreate failed", e)
-            stopSelf()
-        }
+        savedStateRegistryController.performAttach()
+        savedStateRegistryController.performRestore(null)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        super.onCreate()
+        instance = this
+        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        startForeground(1, buildForegroundNotification())
+        createOverlay()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -83,78 +78,82 @@ class IslandOverlayService : Service(),
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createOverlay() {
-        val params = buildLayoutParams()
+        try {
+            val params = buildLayoutParams()
 
-        val composeView = object : AbstractComposeView(this) {
+            // Container FrameLayout يحمل الـ ComposeView
+            val container = FrameLayout(this)
 
-            init {
+            val composeView = ComposeView(this).apply {
+                // ضبط الـ ViewTree owners بالترتيب الصحيح
                 setViewTreeLifecycleOwner(this@IslandOverlayService)
                 setViewTreeViewModelStoreOwner(this@IslandOverlayService)
-            }
+                setViewTreeSavedStateRegistryOwner(this@IslandOverlayService)
 
-            @Composable
-            override fun Content() {
-                AtomixIslandTheme {
-                    var dragOffsetX by remember { mutableStateOf(0f) }
-                    var dragOffsetY by remember { mutableStateOf(0f) }
-                    var lastX by remember { mutableStateOf(positionX.toFloat()) }
-                    var lastY by remember { mutableStateOf(positionY.toFloat()) }
-                    var isExpanded by remember { mutableStateOf(false) }
+                setContent {
+                    AtomixIslandTheme {
+                        var dragOffsetX by remember { mutableStateOf(0f) }
+                        var dragOffsetY by remember { mutableStateOf(0f) }
+                        var lastX by remember { mutableStateOf(positionX.toFloat()) }
+                        var lastY by remember { mutableStateOf(positionY.toFloat()) }
+                        var isExpanded by remember { mutableStateOf(false) }
 
-                    AtomixIsland(
-                        state = islandState,
-                        onTap = {
-                            isExpanded = !isExpanded
-                            islandState = if (isExpanded) {
-                                IslandState.Expanded(
-                                    IslandEvent.Music(
-                                        title     = "Blinding Lights",
-                                        artist    = "The Weeknd",
-                                        progress  = 0.45f,
-                                        isPlaying = true
+                        AtomixIsland(
+                            state = islandState,
+                            onTap = {
+                                isExpanded = !isExpanded
+                                islandState = if (isExpanded) {
+                                    IslandState.Expanded(
+                                        IslandEvent.Music(
+                                            title     = "Blinding Lights",
+                                            artist    = "The Weeknd",
+                                            progress  = 0.45f,
+                                            isPlaying = true
+                                        )
                                     )
-                                )
-                            } else {
-                                IslandState.Compact
-                            }
-                        },
-                        onLongPress = { openSettings() },
-                        modifier = Modifier.pointerInput(Unit) {
-                            detectDragGestures(
-                                onDragStart = {
-                                    lastX = params.x.toFloat()
-                                    lastY = params.y.toFloat()
-                                },
-                                onDrag = { change, dragAmount ->
-                                    change.consume()
-                                    dragOffsetX += dragAmount.x
-                                    dragOffsetY += dragAmount.y
-                                    params.x = (lastX + dragOffsetX).toInt()
-                                    params.y = (lastY + dragOffsetY).toInt()
-                                    try {
-                                        windowManager.updateViewLayout(overlayView, params)
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "updateViewLayout failed", e)
-                                    }
-                                },
-                                onDragEnd = {
-                                    positionX   = params.x
-                                    positionY   = params.y
-                                    dragOffsetX = 0f
-                                    dragOffsetY = 0f
+                                } else {
+                                    IslandState.Compact
                                 }
-                            )
-                        }
-                    )
+                            },
+                            onLongPress = { openSettings() },
+                            modifier = Modifier.pointerInput(Unit) {
+                                detectDragGestures(
+                                    onDragStart = {
+                                        lastX = params.x.toFloat()
+                                        lastY = params.y.toFloat()
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragOffsetX += dragAmount.x
+                                        dragOffsetY += dragAmount.y
+                                        params.x = (lastX + dragOffsetX).toInt()
+                                        params.y = (lastY + dragOffsetY).toInt()
+                                        try {
+                                            windowManager.updateViewLayout(container, params)
+                                        } catch (e: Exception) {
+                                            Log.e(TAG, "updateViewLayout failed", e)
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        positionX   = params.x
+                                        positionY   = params.y
+                                        dragOffsetX = 0f
+                                        dragOffsetY = 0f
+                                    }
+                                )
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        overlayView = composeView
-        try {
-            windowManager.addView(composeView, params)
+            container.addView(composeView)
+            containerView = container
+            windowManager.addView(container, params)
+
         } catch (e: Exception) {
-            Log.e(TAG, "addView failed", e)
+            Log.e(TAG, "createOverlay failed: ${e.message}", e)
+            stopSelf()
         }
     }
 
@@ -180,11 +179,11 @@ class IslandOverlayService : Service(),
 
     private fun removeOverlay() {
         try {
-            overlayView?.let { windowManager.removeView(it) }
+            containerView?.let { windowManager.removeView(it) }
         } catch (e: Exception) {
             Log.e(TAG, "removeView failed", e)
         }
-        overlayView = null
+        containerView = null
     }
 
     fun updateIslandState(state: IslandState) {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AtomixIsland" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="colorPrimary">#00A3FF</item>
+        <item name="colorPrimaryVariant">#7B61FF</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSurface">#0D1117</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+    </style>
+
+    <style name="Theme.AtomixIsland.Transparent" parent="Theme.AtomixIsland">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+</resources>

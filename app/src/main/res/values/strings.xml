@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Atomix Island</string>
+    <string name="settings_app_name">Atomix Island Settings</string>
+    <string name="island_service_name">Atomix Island Service</string>
+    <string name="island_service_desc">Keeping your Dynamic Island active</string>
+    <string name="permission_overlay_title">Display Over Apps</string>
+    <string name="permission_overlay_desc">Required to show the floating Dynamic Island</string>
+    <string name="permission_notification_title">Notification Access</string>
+    <string name="permission_notification_desc">Required to mirror notifications to the island</string>
+    <string name="start_island">Start Atomix Island</string>
+    <string name="stop_island">Stop Atomix Island</string>
+</resources>

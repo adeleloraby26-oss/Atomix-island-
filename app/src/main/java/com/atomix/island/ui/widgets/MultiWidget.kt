@@ -168,7 +168,7 @@ fun WeatherWidget(
             }
 
             Spacer(Modifier.height(10.dp))
-            HorizontalDivider(color = AtomixColors.SurfaceBorder, thickness = 0.5.dp)
+            Divider(color = AtomixColors.SurfaceBorder, thickness = 0.5.dp)
             Spacer(Modifier.height(8.dp))
 
             Row(

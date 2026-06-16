@@ -7,6 +7,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -28,10 +29,10 @@ class PermissionActivity : ComponentActivity() {
         setContent {
             AtomixIslandTheme {
                 PermissionScreen(
-                    hasOverlay       = Settings.canDrawOverlays(this),
-                    onGrantOverlay   = { requestOverlay() },
-                    onGrantNotif     = { requestNotification() },
-                    onDone           = { finish() }
+                    hasOverlay     = Settings.canDrawOverlays(this),
+                    onGrantOverlay = { requestOverlay() },
+                    onGrantNotif   = { requestNotification() },
+                    onDone         = { finish() }
                 )
             }
         }
@@ -63,26 +64,24 @@ fun PermissionScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(
-            modifier              = Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp),
-            horizontalAlignment   = Alignment.CenterHorizontally,
-            verticalArrangement   = Arrangement.spacedBy(24.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Title
             Text(
                 "Setup Atomix Island",
-                color      = AtomixColors.White,
-                fontSize   = 24.sp,
+                color = AtomixColors.White,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 "Grant the following permissions to activate your Dynamic Island.",
-                color    = AtomixColors.TextSecondary,
+                color = AtomixColors.TextSecondary,
                 fontSize = 14.sp
             )
 
-            // Permission cards
             PermissionCard(
                 title       = "Display Over Apps",
                 description = "Required to show the floating island above other apps",
@@ -98,17 +97,14 @@ fun PermissionScreen(
                 onGrant     = onGrantNotif
             )
 
-            // Continue button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(
-                        Brush.linearGradient(
-                            listOf(AtomixColors.ElectricBlue, AtomixColors.PurpleGlow)
-                        )
+                        Brush.linearGradient(listOf(AtomixColors.ElectricBlue, AtomixColors.PurpleGlow))
                     )
-                    .androidx.compose.foundation.clickable { onDone() }
+                    .clickable { onDone() }
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -127,12 +123,12 @@ private fun PermissionCard(
     onGrant: () -> Unit,
 ) {
     Row(
-        modifier              = Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(AtomixColors.DeepSpace)
             .padding(16.dp),
-        verticalAlignment     = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(icon, fontSize = 28.sp)
@@ -147,7 +143,7 @@ private fun PermissionCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .background(AtomixColors.ElectricBlue.copy(alpha = 0.15f))
-                    .androidx.compose.foundation.clickable { onGrant() }
+                    .clickable { onGrant() }
                     .padding(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Text("Grant", color = AtomixColors.ElectricBlue, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)

@@ -85,10 +85,9 @@ class IslandOverlayService : Service(),
             val container = FrameLayout(this)
 
             val composeView = ComposeView(this).apply {
-                // ضبط الـ ViewTree owners بالترتيب الصحيح
+                // ضبط الـ ViewTree owners
                 setViewTreeLifecycleOwner(this@IslandOverlayService)
                 setViewTreeViewModelStoreOwner(this@IslandOverlayService)
-                setViewTreeSavedStateRegistryOwner(this@IslandOverlayService)
 
                 setContent {
                     AtomixIslandTheme {

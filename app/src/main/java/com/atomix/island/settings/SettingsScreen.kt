@@ -39,12 +39,8 @@ fun SettingsScreen(
         contentPadding        = PaddingValues(bottom = 40.dp),
         verticalArrangement   = Arrangement.spacedBy(0.dp)
     ) {
-        // ── Header ──────────────────────────────────────────────────────────
-        item {
-            SettingsHeader()
-        }
+        item { SettingsHeader() }
 
-        // ── Live Preview ────────────────────────────────────────────────────
         item {
             LivePreviewSection(
                 previewState = previewState,
@@ -55,7 +51,6 @@ fun SettingsScreen(
             )
         }
 
-        // ── Power Controls ───────────────────────────────────────────────────
         item {
             SettingsSection(title = "Service") {
                 AtomixButton(label = "Start Atomix Island", color = AtomixColors.MintGreen, onClick = onStartIsland)
@@ -68,7 +63,6 @@ fun SettingsScreen(
             }
         }
 
-        // ── Appearance ───────────────────────────────────────────────────────
         item {
             SettingsSection(title = "Appearance") {
                 SettingsSlider(
@@ -92,7 +86,6 @@ fun SettingsScreen(
             }
         }
 
-        // ── Accent Color Picker ──────────────────────────────────────────────
         item {
             SettingsSection(title = "Accent Color") {
                 ColorPicker(
@@ -102,7 +95,6 @@ fun SettingsScreen(
             }
         }
 
-        // ── Island Size ──────────────────────────────────────────────────────
         item {
             SettingsSection(title = "Island Size") {
                 SettingsSlider(
@@ -120,7 +112,6 @@ fun SettingsScreen(
             }
         }
 
-        // ── Toggles ──────────────────────────────────────────────────────────
         item {
             SettingsSection(title = "Widgets") {
                 SettingsToggle("Battery Widget", prefs.showBatteryWidget) {}
@@ -133,7 +124,6 @@ fun SettingsScreen(
     }
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
 @Composable
 private fun SettingsHeader() {
     Box(
@@ -142,23 +132,17 @@ private fun SettingsHeader() {
             .height(180.dp)
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        AtomixColors.DeepSpace,
-                        AtomixColors.PureBlack
-                    )
+                    colors = listOf(AtomixColors.DeepSpace, AtomixColors.PureBlack)
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Logo glow
             Box(
                 modifier = Modifier
                     .size(64.dp)
                     .background(
-                        Brush.radialGradient(
-                            listOf(AtomixColors.ElectricBlueGlow, Color.Transparent)
-                        ),
+                        Brush.radialGradient(listOf(AtomixColors.ElectricBlueGlow, Color.Transparent)),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -167,31 +151,18 @@ private fun SettingsHeader() {
                     modifier = Modifier
                         .size(48.dp)
                         .background(
-                            Brush.linearGradient(
-                                listOf(AtomixColors.ElectricBlue, AtomixColors.PurpleGlow)
-                            ),
+                            Brush.linearGradient(listOf(AtomixColors.ElectricBlue, AtomixColors.PurpleGlow)),
                             RoundedCornerShape(14.dp)
                         )
                 )
             }
             Spacer(Modifier.height(12.dp))
-            Text(
-                "Atomix Island",
-                color      = AtomixColors.White,
-                fontSize   = 24.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp
-            )
-            Text(
-                "Settings",
-                color    = AtomixColors.TextSecondary,
-                fontSize = 13.sp
-            )
+            Text("Atomix Island", color = AtomixColors.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
+            Text("Settings", color = AtomixColors.TextSecondary, fontSize = 13.sp)
         }
     }
 }
 
-// ─── Live Preview Section ─────────────────────────────────────────────────────
 @Composable
 private fun LivePreviewSection(
     previewState: com.atomix.island.ui.components.IslandState,
@@ -201,7 +172,6 @@ private fun LivePreviewSection(
     onPreviewCompact: () -> Unit,
 ) {
     SettingsSection(title = "Live Preview") {
-        // Preview canvas
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,12 +182,9 @@ private fun LivePreviewSection(
         ) {
             AtomixIsland(state = previewState)
         }
-
         Spacer(Modifier.height(12.dp))
-
-        // Preview buttons
         Row(
-            modifier              = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             PreviewChip("Compact",   onClick = onPreviewCompact,   modifier = Modifier.weight(1f))
@@ -242,7 +209,6 @@ private fun PreviewChip(label: String, onClick: () -> Unit, modifier: Modifier =
     }
 }
 
-// ─── Settings Section ─────────────────────────────────────────────────────────
 @Composable
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(
@@ -251,12 +217,12 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
             .padding(horizontal = 20.dp, vertical = 10.dp)
     ) {
         Text(
-            text       = title.uppercase(),
-            color      = AtomixColors.TextTertiary,
-            fontSize   = 11.sp,
+            text = title.uppercase(),
+            color = AtomixColors.TextTertiary,
+            fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 1.sp,
-            modifier   = Modifier.padding(bottom = 8.dp, start = 4.dp)
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
         )
         Box(
             modifier = Modifier
@@ -270,7 +236,6 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
     }
 }
 
-// ─── Settings Slider ─────────────────────────────────────────────────────────
 @Composable
 private fun SettingsSlider(
     label: String,
@@ -280,48 +245,42 @@ private fun SettingsSlider(
 ) {
     Column(modifier = Modifier.padding(bottom = 12.dp)) {
         Row(
-            modifier              = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(label, color = AtomixColors.TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-            Text(
-                "${(value * 100).toInt()}%",
-                color    = color,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Text("${(value * 100).toInt()}%", color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         }
         Spacer(Modifier.height(6.dp))
         Slider(
-            value         = value,
+            value = value,
             onValueChange = onValueChange,
-            colors        = SliderDefaults.colors(
-                thumbColor              = color,
-                activeTrackColor        = color,
-                inactiveTrackColor      = AtomixColors.Graphite
+            colors = SliderDefaults.colors(
+                thumbColor = color,
+                activeTrackColor = color,
+                inactiveTrackColor = AtomixColors.Graphite
             ),
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-// ─── Settings Toggle ─────────────────────────────────────────────────────────
 @Composable
 private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
-        modifier              = Modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment     = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(label, color = AtomixColors.TextPrimary, fontSize = 14.sp)
         Switch(
-            checked         = checked,
+            checked = checked,
             onCheckedChange = onCheckedChange,
-            colors          = SwitchDefaults.colors(
-                checkedThumbColor   = AtomixColors.White,
-                checkedTrackColor   = AtomixColors.ElectricBlue,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = AtomixColors.White,
+                checkedTrackColor = AtomixColors.ElectricBlue,
                 uncheckedThumbColor = AtomixColors.TextTertiary,
                 uncheckedTrackColor = AtomixColors.Graphite,
             )
@@ -329,7 +288,6 @@ private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Bo
     }
 }
 
-// ─── Color Picker ─────────────────────────────────────────────────────────────
 @Composable
 private fun ColorPicker(selectedColor: Color, onColorSelected: (Long) -> Unit) {
     val colors = listOf(
@@ -340,12 +298,11 @@ private fun ColorPicker(selectedColor: Color, onColorSelected: (Long) -> Unit) {
         0xFFFF3B5C to "Rose",
         0xFFFFB800 to "Amber",
     )
-
     Row(
-        modifier              = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        colors.forEach { (hex, name) ->
+        colors.forEach { (hex, _) ->
             val isSelected = selectedColor == Color(hex)
             Box(
                 modifier = Modifier
@@ -359,7 +316,6 @@ private fun ColorPicker(selectedColor: Color, onColorSelected: (Long) -> Unit) {
     }
 }
 
-// ─── Action Button ────────────────────────────────────────────────────────────
 @Composable
 private fun AtomixButton(label: String, color: Color, onClick: () -> Unit) {
     Box(
@@ -372,11 +328,6 @@ private fun AtomixButton(label: String, color: Color, onClick: () -> Unit) {
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text       = label,
-            color      = color,
-            fontSize   = 14.sp,
-            fontWeight = FontWeight.SemiBold
-        )
+        Text(text = label, color = color, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }

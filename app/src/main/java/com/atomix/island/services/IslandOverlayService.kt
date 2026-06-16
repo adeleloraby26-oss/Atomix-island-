@@ -19,6 +19,7 @@ import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import com.atomix.island.AtomixApp
 import com.atomix.island.R
 import com.atomix.island.settings.SettingsActivity
@@ -82,7 +83,7 @@ class IslandOverlayService : Service(),
             setViewTreeLifecycleOwner(this@IslandOverlayService)
             setViewTreeViewModelStoreOwner(this@IslandOverlayService)
             // Use the compatible API for SavedStateRegistryOwner
-            androidx.savedstate.setViewTreeSavedStateRegistryOwner(this, this@IslandOverlayService)
+            ViewTreeSavedStateRegistryOwner.set(this, this@IslandOverlayService)
             setContent {
                 AtomixIslandTheme {
                     var dragOffsetX by remember { mutableStateOf(0f) }

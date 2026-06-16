@@ -3,23 +3,22 @@ package com.atomix.island.services
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.view.*
-import androidx.compose.animation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
-import androidx.savedstate.ViewTreeSavedStateRegistryOwner
 import com.atomix.island.AtomixApp
 import com.atomix.island.R
 import com.atomix.island.settings.SettingsActivity
@@ -37,10 +36,11 @@ class IslandOverlayService : Service(),
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore = ViewModelStore()
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
-    override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
+    override val savedStateRegistry: SavedStateRegistry
+        get() = savedStateRegistryController.savedStateRegistry
 
     private lateinit var windowManager: WindowManager
-    private var overlayView: ComposeView? = null
+    private var overlayView: View? = null
 
     private var islandState by mutableStateOf<IslandState>(IslandState.Compact)
     private var positionX by mutableStateOf(0)
@@ -79,12 +79,10 @@ class IslandOverlayService : Service(),
 
     private fun createOverlay() {
         val params = buildLayoutParams()
-        overlayView = ComposeView(this).apply {
-            setViewTreeLifecycleOwner(this@IslandOverlayService)
-            setViewTreeViewModelStoreOwner(this@IslandOverlayService)
-            // Use the compatible API for SavedStateRegistryOwner
-            ViewTreeSavedStateRegistryOwner.set(this, this@IslandOverlayService)
-            setContent {
+
+        val view = object : AbstractComposeView(this) {
+            @Composable
+            override fun Content() {
                 AtomixIslandTheme {
                     var dragOffsetX by remember { mutableStateOf(0f) }
                     var dragOffsetY by remember { mutableStateOf(0f) }
@@ -93,16 +91,18 @@ class IslandOverlayService : Service(),
                     var isExpanded by remember { mutableStateOf(false) }
 
                     AtomixIsland(
-                        state   = islandState,
-                        onTap   = {
+                        state = islandState,
+                        onTap = {
                             isExpanded = !isExpanded
                             islandState = if (isExpanded) {
-                                IslandState.Expanded(IslandEvent.Music(
-                                    title    = "Blinding Lights",
-                                    artist   = "The Weeknd",
-                                    progress = 0.45f,
-                                    isPlaying = true
-                                ))
+                                IslandState.Expanded(
+                                    IslandEvent.Music(
+                                        title     = "Blinding Lights",
+                                        artist    = "The Weeknd",
+                                        progress  = 0.45f,
+                                        isPlaying = true
+                                    )
+                                )
                             } else {
                                 IslandState.Compact
                             }
@@ -120,11 +120,11 @@ class IslandOverlayService : Service(),
                                     dragOffsetY += dragAmount.y
                                     params.x = (lastX + dragOffsetX).toInt()
                                     params.y = (lastY + dragOffsetY).toInt()
-                                    windowManager.updateViewLayout(this@apply, params)
+                                    windowManager.updateViewLayout(this@object, params)
                                 },
                                 onDragEnd = {
-                                    positionX = params.x
-                                    positionY = params.y
+                                    positionX   = params.x
+                                    positionY   = params.y
                                     dragOffsetX = 0f
                                     dragOffsetY = 0f
                                 }
@@ -133,8 +133,16 @@ class IslandOverlayService : Service(),
                     )
                 }
             }
+        }.also { composeView ->
+            composeView.setViewTreeLifecycleOwner(this)
+            composeView.setViewTreeViewModelStoreOwner(this)
+            composeView.setViewCompositionStrategy(
+                androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
+            )
         }
-        windowManager.addView(overlayView, params)
+
+        overlayView = view
+        windowManager.addView(view, params)
     }
 
     private fun buildLayoutParams(): WindowManager.LayoutParams {
@@ -144,13 +152,10 @@ class IslandOverlayService : Service(),
             @Suppress("DEPRECATION")
             WindowManager.LayoutParams.TYPE_PHONE
         }
-
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            positionX,
-            positionY,
-            type,
+            positionX, positionY, type,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                     WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
@@ -161,10 +166,8 @@ class IslandOverlayService : Service(),
     }
 
     private fun removeOverlay() {
-        overlayView?.let {
-            windowManager.removeView(it)
-            overlayView = null
-        }
+        overlayView?.let { windowManager.removeView(it) }
+        overlayView = null
     }
 
     fun updateIslandState(state: IslandState) {
@@ -172,10 +175,9 @@ class IslandOverlayService : Service(),
     }
 
     private fun openSettings() {
-        val intent = Intent(this, SettingsActivity::class.java).apply {
+        startActivity(Intent(this, SettingsActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        startActivity(intent)
+        })
     }
 
     private fun buildForegroundNotification(): Notification {

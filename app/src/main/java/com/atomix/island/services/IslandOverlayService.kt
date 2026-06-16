@@ -10,12 +10,10 @@ import android.os.IBinder
 import android.view.*
 import androidx.compose.animation.*
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
 import androidx.savedstate.SavedStateRegistry
@@ -27,7 +25,6 @@ import com.atomix.island.settings.SettingsActivity
 import com.atomix.island.ui.components.*
 import com.atomix.island.ui.theme.AtomixIslandTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class IslandOverlayService : Service(),
@@ -35,18 +32,15 @@ class IslandOverlayService : Service(),
     ViewModelStoreOwner,
     SavedStateRegistryOwner {
 
-    // ── Lifecycle boilerplate ────────────────────────────────────────────────
     private val lifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore = ViewModelStore()
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
-    // ── Window manager ───────────────────────────────────────────────────────
     private lateinit var windowManager: WindowManager
     private var overlayView: ComposeView? = null
 
-    // ── State ────────────────────────────────────────────────────────────────
     private var islandState by mutableStateOf<IslandState>(IslandState.Compact)
     private var positionX by mutableStateOf(0)
     private var positionY by mutableStateOf(48)
@@ -70,11 +64,6 @@ class IslandOverlayService : Service(),
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
-        when (intent?.action) {
-            ACTION_UPDATE_STATE -> {
-                // In a real app deserialize state from extra
-            }
-        }
         return START_STICKY
     }
 
@@ -87,13 +76,13 @@ class IslandOverlayService : Service(),
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    // ── Overlay creation ──────────────────────────────────────────────────────
     private fun createOverlay() {
         val params = buildLayoutParams()
         overlayView = ComposeView(this).apply {
             setViewTreeLifecycleOwner(this@IslandOverlayService)
             setViewTreeViewModelStoreOwner(this@IslandOverlayService)
-            setViewTreeSavedStateRegistryOwner(this@IslandOverlayService)
+            // Use the compatible API for SavedStateRegistryOwner
+            androidx.savedstate.setViewTreeSavedStateRegistryOwner(this, this@IslandOverlayService)
             setContent {
                 AtomixIslandTheme {
                     var dragOffsetX by remember { mutableStateOf(0f) }
@@ -177,7 +166,6 @@ class IslandOverlayService : Service(),
         }
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
     fun updateIslandState(state: IslandState) {
         islandState = state
     }
